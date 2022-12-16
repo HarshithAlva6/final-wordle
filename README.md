@@ -12,6 +12,7 @@ Group 23
 Members:
 - Harshith Harijeevan
 - Heet Savla
+- Sam Le
 - Jayraj Arora
 - Yash Gandhi
 
