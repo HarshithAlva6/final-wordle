@@ -272,6 +272,23 @@ async def play_game_or_check_progress(read_db, write_db, username, game_id, gues
     return {"guesses": guesses, "guess_remaining": guess_remaining, "game_state": states[state]}, 200
 
 
+@app.route("/games/registerleaderboard", methods=["POST"])
+async def register_leaderboard():
+    url = request.args.get("url")
+    write_db = await _get_write_db()
+    try:
+        await write_db.execute(
+            """
+            INSERT INTO leaderboards(url) 
+            VALUES (:url)
+            """,
+            values={'url': url}
+        )
+    # Error
+    except Exception as e:
+        abort(409, e)
+    return {"Message": "Leaderboard registered"}, 201
+
 async def fetch_guesses(read_db, game_id):
     # Prepare the response
     guess_output = await read_db.fetch_all(
