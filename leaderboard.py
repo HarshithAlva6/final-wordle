@@ -1,8 +1,12 @@
 # Imports
 import dataclasses
+import asyncio
 from quart import Quart, jsonify, abort
 from quart_schema import QuartSchema, tag, validate_request, RequestSchemaValidationError
 import redis
+import os
+import socket
+import httpx
 
 # Initialize the app
 app = Quart(__name__)
@@ -20,6 +24,7 @@ class Result:
 def _initialize_redis():
     r = redis.Redis()
     return r
+
 
 
 @tag(["Leaderboard"])
@@ -84,6 +89,27 @@ async def leaderboard():
 
     return leaderboard_result, 200
 
+async def register():
+    port = os.environ.get("PORT")
+    service_url = socket.getfqdn() + ":" + str(port) + '/results'
+    params = {"url": service_url}
+    print(service_url)
+    while True:
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.post('http://tuffix-vm/games/registerleaderboard', params=params)
+                # Either successful registration or is registered already
+                if r.status_code == 201 or r.status_code==409:
+                    break
+            print(f"Error retrying...")
+            await asyncio.sleep(3)
+        except Exception:
+            print(f"Error retrying...")
+            await asyncio.sleep(3)
+
+
+
+
 
 # Error status: Cannot or will not process the request.
 @app.errorhandler(400)
@@ -95,3 +121,6 @@ def bad_request(e):
 @app.errorhandler(RequestSchemaValidationError)
 def bad_request(e):
     return {"error": str(e.validation_error)}, 400
+
+
+asyncio.run(register())
