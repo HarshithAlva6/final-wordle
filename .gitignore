@@ -1,0 +1,4 @@
+*.db
+*.keep
+var/*/data/*
+var/*/mount/*
