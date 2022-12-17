@@ -19,22 +19,11 @@ app = Quart(__name__)
 QuartSchema(app)
 app.config.from_file(f"../etc/wordle.toml", toml.load)
 
-db_list = ['PRIMARY_GAME_URL', 'SECONDARY_GAME_URL', 'TERTIARY_GAME_URL']
-iterator = itertools.cycle(db_list)
-
-
 # Establish database connection for games
-async def _get_game_read_db(db):
-    db = databases.Database(app.config["DATABASES"][db])
+async def _get_game_db():
+    db = databases.Database(app.config["DATABASES"]['PRIMARY_GAME_URL'])
     await db.connect()
     return db
-
-
-async def _get_game_write_db():
-    db = databases.Database(app.config["DATABASES"]["PRIMARY_GAME_URL"])
-    await db.connect()
-    return db
-
 
 # Establish database connection.
 async def _get_user_db():
@@ -46,8 +35,8 @@ async def _get_user_db():
 # insert into query for games and guesses table
 async def insert_into_games_sql(username):
 
-    read_db = await _get_game_read_db(next(iterator))
-    write_db = await _get_game_write_db()
+    read_db = await _get_game_db()
+    write_db = await _get_game_db()
 
     correct_words_result = await read_db.fetch_one(
         """
