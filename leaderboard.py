@@ -85,7 +85,7 @@ async def leaderboard():
 
     for user, score in avg_score_result:
         user = user.decode('UTF-8').split(':')[1]
-        leaderboard_result.append({"username": user,  "score": score})
+        leaderboard_result.append({"username": user,  "score": round(score,3)})
 
     return leaderboard_result, 200
 
@@ -93,7 +93,6 @@ async def register():
     port = os.environ.get("PORT")
     service_url = socket.getfqdn() + ":" + str(port) + '/results'
     params = {"url": service_url}
-    print(service_url)
     while True:
         try:
             async with httpx.AsyncClient() as client:
@@ -101,10 +100,10 @@ async def register():
                 # Either successful registration or is registered already
                 if r.status_code == 201 or r.status_code==409:
                     break
-            print(f"Error retrying...")
+            app.logger.debug(f"Error got {r.status_code} response, retrying..")
             await asyncio.sleep(3)
-        except Exception:
-            print(f"Error retrying...")
+        except Exception as e:
+            app.logger.debug(f"Exception {e} retrying...")
             await asyncio.sleep(3)
 
 
