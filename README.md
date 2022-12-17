@@ -55,14 +55,9 @@ $ sudo service nginx restart
 ```
 
 ### Initializing and Starting the Application
-1. Remove .keep files added in the application
+1. Create folder structure for read/write replication
 ```
-rm var/primary/mount/.keep
-rm var/primary/data/.keep
-rm var/secondary/data/.keep
-rm var/secondary/mount/.keep
-rm var/tertiary/mount/.keep
-rm var/tertiary/data/.keep
+./bin/create_folder_structure.sh
 ```
 2. Start three 3 instances of game, 1 instance of user, and 1 instance of leaderboard service with foreman
 ```
@@ -70,7 +65,7 @@ foreman start
 ```
 3. Run the command below to initialize user and game databases and redis in-memory data store, populate them with dummy values. Please wait as this will take some time
 ```
-./bin/init.sh
+./bin/populate_data.sh
 ```
 
 
@@ -136,4 +131,8 @@ http POST http://127.0.0.1:5400/results guess_number=<Number from 1 to 6> status
 - Retrieve the top 10 users based on their average scores.
 ```
 http GET http://tuffix-vm/leaderboard
+```
+- Register keyboard to reveive notification after game finishes
+```
+http --auth <username>:<password> POST http://tuffix-vm/games/registerleaderboard?url=<leaderdboard url here>
 ```
