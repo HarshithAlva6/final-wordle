@@ -91,14 +91,18 @@ async def leaderboard():
 
 async def register():
     port = os.environ.get("PORT")
-    service_url = socket.getfqdn() + ":" + str(port) + '/results'
-    params = {"url": service_url}
+    
+    # have to use what we bind to in the hypercorn commands
+    callback_url = "http://"+ socket.getfqdn('wordle.local.gd') + ":" + str(port) + '/results'
+    params = {"url": callback_url}
     while True:
         try:
             async with httpx.AsyncClient() as client:
                 r = await client.post('http://tuffix-vm/games/registerleaderboard', params=params)
                 # Either successful registration or is registered already
                 if r.status_code == 201 or r.status_code==409:
+                    app.logger.debug(f"Registered {callback_url}.")
+
                     break
             app.logger.debug(f"Error got {r.status_code} response, retrying..")
             await asyncio.sleep(3)
