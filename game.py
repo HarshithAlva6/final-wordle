@@ -131,6 +131,11 @@ async def play_game(game_id):
     username = request.authorization.username
 
     game_output = await get_game_info(game_id, username)
+
+    # Make sure game is in progress
+    if game_output["state"] != 0:
+        abort(400, "Game already finished")
+
     secret_word = game_output["secret_word"]
     guess_remaining = game_output["guess_remaining"]
     state = game_output["state"]
