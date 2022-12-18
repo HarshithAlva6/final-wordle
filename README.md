@@ -13,8 +13,7 @@ Members:
 - Harshith Harijeevan
 - Heet Savla
 - Sam Le
-- Jayraj Arora
-- Yash Gandhi
+- Michael Morikawa
 
 ## Setting Up
 ### Development Environment 
@@ -32,6 +31,7 @@ Tuffix 2020 (Linux)
 - HTTPie
 - Redis
 - LiteFS
+- HTTPX
 
 ### VHost Setup
 1. Make sure that nginx is running in the background
@@ -124,7 +124,7 @@ http GET http://tuffix-vm/games/ --auth <username>:<password>
 ```
 http GET http://tuffix-vm/games/statistics --auth <username>:<password>
 ```
-- Post the results of a game for the leaderboard service.
+- Post the results of a game for the leaderboard service. (Used internally)
 ```
 http POST http://127.0.0.1:5400/results guess_number=<Number from 1 to 6> status=<win or loss> username=<username>
 ```
@@ -132,7 +132,7 @@ http POST http://127.0.0.1:5400/results guess_number=<Number from 1 to 6> status
 ```
 http GET http://tuffix-vm/leaderboard
 ```
-- Register keyboard to reveive notification after game finishes
+- Register a callback url to send notification after game finishes, should be an endpoint that accepts a POST request expecting a json payload with guess_number(between 1-6), status (win,loss), and username
 ```
-http --auth <username>:<password> POST http://tuffix-vm/games/registerleaderboard?url=<leaderdboard url here>
+http POST http://tuffix-vm/games/registerleaderboard?url=<leaderdboard_url>
 ```
