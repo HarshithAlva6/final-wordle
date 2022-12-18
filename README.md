@@ -1,10 +1,10 @@
 # CPSC 449 Project 4
  [Project 4](https://docs.google.com/document/d/19BqaDN9M9fMfw6WjwISGDauF_I2w20UJ4lNmW9USbn0/edit) is used to add Webhook to the Games Service, and deliver items to a message queue to the Leaderboard Service that was created in  [Project 3](https://docs.google.com/document/d/1OWltxCFRsd2s4khOdfwKLZ3vqF6dsJ087nyMn0klcQs/edit) which involved extending the base Wordle backend application from [Project 1](https://docs.google.com/document/d/14YzD8w5SpJk0DqizgrgyOsXvQ2-rrd-39RUSe2GNvz4/edit) and implementation of nginx to authenticate endpoints and load balancing from [Project 2](https://docs.google.com/document/d/1BXrmgSclvifgYWItGxxhZ72BrmiD5evXoRbA_uRP_jM/edit). This includes the following objectives:
-- Configuring replication using Litefs for the database associated with Games service. (Write requests go to the primary replica, and read requests can be made from either primary, secondary or tertiary replicas)
-- Developing 2 new Leaderboard services which can post results of a game and obtain the Top 10 users based on their average scores.
-- Use Redis to store data for leaderboard services.
+- Adding a Webhook to the Game Service, in order for clients to get any updates whenever the user wins or loses. For this the clint will register to the Games Service, and get a callback URL which stores the required updates about the game results.
+- Deliver messages using worker process, where the guess endpoint has a seperate worker function that sends the scores to the Leaderboard service once a game is finished. Here the job is enqueued rather than retrying the requests.
+- Retrying failed jobs that were added by RQ in the previous case when worker function fails to send scores. This is done using UNIX cron service every 10 minutes to ensure all scores are sent to the Leaderboard service.
 
-This project also builds upon concepts introduced in [Exercise 2](https://docs.google.com/document/d/1-tFBfCP2rhk5YFtXYpGD894Ghy4UY-J3o9Zs7abbS8c/edit),[Exercise 3](https://docs.google.com/document/d/14i8cpm7z1oFh5y5gmAkQ39AH3Pu8oWRr6B6TOziGYhY/edit) and [Exercise 4](https://docs.google.com/document/d/1GeF5txkEb3Jl0_YtnFKFh21xiDff1IJ54XC9Qydk3GE/edit) with regards to setting up Nginx server, building indices, using redis and associated libraries, working with Webhooks and also Message Queueing.
+This project also builds upon concepts introduced in [Exercise 2](https://docs.google.com/document/d/1-tFBfCP2rhk5YFtXYpGD894Ghy4UY-J3o9Zs7abbS8c/edit),[Exercise 3](https://docs.google.com/document/d/14i8cpm7z1oFh5y5gmAkQ39AH3Pu8oWRr6B6TOziGYhY/edit) and [Exercise 4](https://docs.google.com/document/d/1GeF5txkEb3Jl0_YtnFKFh21xiDff1IJ54XC9Qydk3GE/edit) with regards to setting up Nginx server, building indices, using redis and associated libraries, working with Webhooks, Message Queueing and using the UNIX cron service.
 
 ### Authors
 Section 02
@@ -31,6 +31,7 @@ Tuffix 2020 (Linux)
 - HTTPie
 - Redis
 - LiteFS
+- RQ
 - HTTPX
 
 ### VHost Setup
@@ -79,6 +80,7 @@ foreman start
 - Check the statistics for a particular user
 - Post the results of a game taking input the game decision and the number of guesses.
 - Retrieve the top 10 users based on their average scores.
+- Register to the Games service via URL's to access Leaderboard.
 
 ## Running the Application
 
