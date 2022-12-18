@@ -8,6 +8,10 @@ import databases
 import toml
 from quart import Quart, g, request, abort, jsonify
 from quart_schema import QuartSchema, RequestSchemaValidationError, validate_request, tag
+from redis import Redis
+from rq import Queue
+from rq.job import Job
+from rq.registry import FailedJobRegistry
 
 
 # Initialize the app
@@ -19,6 +23,7 @@ QuartSchema(app, tags=[
                     ])
 app.config.from_file(f"./etc/wordle.toml", toml.load)
 
+registry = FailedJobRegistry(queue=queue)
 
 @dataclasses.dataclass
 class Word:
@@ -191,6 +196,7 @@ async def play_game_or_check_progress(read_db, write_db, username, game_id, gues
     secret_word = games_output["secret_word"]
     state = 0
     guess_remaining = games_output["guess_remaining"]
+    final_data = []
 
     if guess is None:
         guess_output = await fetch_guesses(read_db, game_id)
@@ -200,6 +206,12 @@ async def play_game_or_check_progress(read_db, write_db, username, game_id, gues
         # when the user guessed the correct word
         if guess == secret_word:
             state = 1
+            final_data.append({
+            "status": state
+            "username": username
+            })
+            job = q.enqueue(worker_wordle, final_data, "http://127.0.0.1:5400/leaderboard/results")
+            print(job.result)
 
         valid_word_output = await read_db.fetch_one(
             """
@@ -221,6 +233,13 @@ async def play_game_or_check_progress(read_db, write_db, username, game_id, gues
             # user lost the game
             if guess_remaining == 0 and state == 0:
                 state = 2
+                final_data.append({
+                    "status": state
+                    "username": username
+                })
+                job = q.enqueue(worker_wordle, final_data, "http://127.0.0.1:5400/leaderboard/results")
+                print(job.result)
+
             await write_db.execute(
                 """
                 UPDATE games
@@ -331,6 +350,13 @@ def compare(secret_word, guess):
 
     return correct_positions, incorrect_positions
 
+async def worker_wordle(data):
+    redis_conn = Redis()
+    q = Queue(connection=redis_conn)
+    resp = requests.get(add_game_results, data)
+    if(resp.status == 200)
+        return resp.text
+    return {"worker found error": resp.error}, 400
 
 # Error status: Client error.
 @app.errorhandler(RequestSchemaValidationError)
