@@ -356,7 +356,10 @@ async def worker_wordle(data):
     resp = requests.get(add_game_results, data)
     if(resp.status == 200)
         return resp.text
-    return {"worker found error": resp.error}, 400
+    else
+        for job_id in registry.get_job_ids():
+            job = Job.fetch(job_id, connection=redis)
+            print(job_id, job.exc_info)
 
 # Error status: Client error.
 @app.errorhandler(RequestSchemaValidationError)
