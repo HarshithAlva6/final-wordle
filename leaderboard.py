@@ -34,10 +34,10 @@ async def add_game_results(data):
     """ Posting the results of the game. Pass username, status as win/loss and the number of guesses"""
     data = dataclasses.asdict(data)
     r = _initialize_redis()
-    status = data['status']
+    status = data['status'].lower()
     username = data['username']
 
-    if status not in ['win', 'loss']:
+    if status not in {'win', 'loss'}:
         abort(400, "Please pass the status of the game as either win or loss")
     guess_number = data['guess_number']
     if status == 'loss' and guess_number != 6:
@@ -46,7 +46,6 @@ async def add_game_results(data):
     if status == 'loss':
         game_score = 0
     else:
-
         if guess_number < 1 or guess_number > 6:
             abort(400, "Please enter the guess number between 1 and 6 if game status is win")
 
@@ -55,12 +54,12 @@ async def add_game_results(data):
     # if redis key is not created it automatically create a key
 
     # increment total of the game score by the current game score
-    r.hincrby("users:" + username, "total_score", game_score)
-    total_score = int(r.hget("users:" + username, "total_score").decode("UTF-8"))
+    r.hincrby(f"users:{username}", "total_score", game_score)
+    total_score = int(r.hget(f"users:{username}", "total_score").decode("UTF-8"))
 
     # increment the number of games by 1
     r.hincrby("users:" + username, "game_count", 1)
-    number_of_games = int(r.hget("users:" + username, "game_count").decode("UTF-8"))
+    number_of_games = int(r.hget(f"users:{username}", "game_count").decode("UTF-8"))
 
     avg_score = total_score / number_of_games
 
